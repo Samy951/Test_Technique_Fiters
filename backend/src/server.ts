@@ -1,5 +1,6 @@
 import express, { Application, Request, Response, NextFunction } from 'express';
 import cors from 'cors';
+import todoRoutes from './routes/todos';
 
 const app: Application = express();
 const PORT: number = process.env.PORT ? parseInt(process.env.PORT) : 5000;
@@ -7,6 +8,9 @@ const PORT: number = process.env.PORT ? parseInt(process.env.PORT) : 5000;
 // Middleware
 app.use(cors()); //permet au frontend (port 3000) d'appeler l'API (port 5000)
 app.use(express.json()); // parse automatiquement les body JSON
+
+// Routes
+app.use('/api/todos', todoRoutes);
 
 // Route de test
 app.get('/api/health', (req: Request, res: Response) => {
