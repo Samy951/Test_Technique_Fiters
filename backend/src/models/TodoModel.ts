@@ -4,7 +4,7 @@ import { Todo, CreateTodoData, UpdateTodoData, Priority } from '../types/Todo';
 export class TodoModel {
   private todos: Todo[] = [];
 
-  // Créer une nouvelle tâche
+  // Créer une nouvelle tâche (Pattern singleton)
   create(todoData: CreateTodoData): Todo {
     const now = new Date();
     
