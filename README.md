@@ -112,7 +112,6 @@ npm run dev:frontend # Port 3000
 
 - **Frontend** : http://localhost:3000
 - **Backend API** : http://localhost:5000
-- **API Docs** : http://localhost:5000/api/todos
 
 ## 📡 API Endpoints
 
