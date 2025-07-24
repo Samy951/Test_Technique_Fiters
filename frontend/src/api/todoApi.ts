@@ -10,7 +10,7 @@ const api = axios.create({
   timeout: 10000 // 10 secondes max
 });
 
-// Intercepteur pour transformer les dates string → Date objects
+// Intercepteur (execution auto) pour transformer les dates string → Date objects
 api.interceptors.response.use(
   (response) => {
     // Transformer les champs de date en objets Date
@@ -28,12 +28,12 @@ api.interceptors.response.use(
   }
 );
 
-// Helper pour transformer les dates
+// Helper pour transformer les dates et eviter de faire new Date() sur chaque composant
 function transformDates(obj: any): any {
-  if (!obj) return obj;
+  if (!obj) return obj; 
   
   const dateFields = ['createdAt', 'updatedAt', 'dueDate'];
-  const transformed = { ...obj };
+  const transformed = { ...obj }; // Copie de l'objet pour ne pas modifier l'original
   
   dateFields.forEach(field => {
     if (transformed[field] && typeof transformed[field] === 'string') {
