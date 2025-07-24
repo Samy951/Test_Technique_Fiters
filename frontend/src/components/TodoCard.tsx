@@ -9,9 +9,10 @@ import {
   Save, 
   X, 
   Clock,
-  CheckCircle 
+  CheckCircle,
+  GripVertical 
 } from 'lucide-react'
-import { Todo, Priority } from '../types/Todo'
+import { Todo, Priority, TodoStatus } from '../types/Todo'
 
 interface TodoCardProps {
   todo: Todo
@@ -37,7 +38,14 @@ const TodoCard = ({ todo, onUpdate, onDelete }: TodoCardProps) => {
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: todo.id })
+  } = useSortable({ 
+    id: todo.id,
+    disabled: isEditing, // Désactiver drag pendant édition
+    data: {
+      type: 'todo',
+      todo: todo
+    }
+  })
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -74,7 +82,7 @@ const TodoCard = ({ todo, onUpdate, onDelete }: TodoCardProps) => {
     })
   }
 
-  const isOverdue = todo.dueDate && todo.dueDate < new Date() && !todo.completed
+  const isOverdue = todo.dueDate && todo.dueDate < new Date() && todo.status !== TodoStatus.DONE
   const priorityConfig = getPriorityConfig(todo.priority)
 
   // Handlers
@@ -117,10 +125,11 @@ const TodoCard = ({ todo, onUpdate, onDelete }: TodoCardProps) => {
       <div
         ref={setNodeRef}
         style={style}
-        className="opacity-50 transform rotate-2 kanban-card"
+        className={`kanban-card bg-white rounded-lg shadow-sm border-l-4 ${priorityConfig.color} opacity-40`}
       >
-        <div className="bg-white p-4 rounded-lg shadow-lg border-2 border-blue-300">
-          <div className="h-16 bg-gray-100 rounded animate-pulse"></div>
+        <div className="p-4">
+          <div className="h-4 bg-gray-200 rounded mb-2 animate-pulse"></div>
+          <div className="h-3 bg-gray-100 rounded w-3/4 animate-pulse"></div>
         </div>
       </div>
     )
@@ -131,10 +140,7 @@ const TodoCard = ({ todo, onUpdate, onDelete }: TodoCardProps) => {
       ref={setNodeRef}
       style={style}
       {...attributes}
-      {...listeners}
-      className={`kanban-card bg-white rounded-lg shadow-sm border-l-4 ${priorityConfig.color} cursor-grab active:cursor-grabbing ${
-        isOverdue ? 'ring-2 ring-red-300' : ''
-      }`}
+      className={`kanban-card bg-white rounded-lg shadow-sm border-l-4 ${priorityConfig.color} ${isOverdue ? 'ring-2 ring-red-300' : ''}`}
     >
       <div className="p-4">
         {isEditing ? (
@@ -196,19 +202,31 @@ const TodoCard = ({ todo, onUpdate, onDelete }: TodoCardProps) => {
           <div>
             {/* Header avec statut et priorité */}
             <div className="flex items-start justify-between mb-2">
-              <div className="flex-1">
-                <h4 className="font-medium text-gray-900 leading-tight">
-                  {todo.title}
-                </h4>
-                {todo.description && (
-                  <p className="text-sm text-gray-600 mt-1 line-clamp-2">
-                    {todo.description}
-                  </p>
-                )}
+              <div className="flex items-start space-x-2 flex-1">
+                {/* Poignée de drag */}
+                <div 
+                  {...listeners}
+                  className="cursor-grab active:cursor-grabbing p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md mt-0.5 flex-shrink-0 border border-gray-200"
+                  title="⋮⋮ Glisser pour déplacer"
+                  style={{ touchAction: 'none' }}
+                >
+                  <GripVertical className="h-5 w-5" />
+                </div>
+                
+                <div className="flex-1">
+                  <h4 className="font-medium text-gray-900 leading-tight">
+                    {todo.title}
+                  </h4>
+                  {todo.description && (
+                    <p className="text-sm text-gray-600 mt-1 line-clamp-2">
+                      {todo.description}
+                    </p>
+                  )}
+                </div>
               </div>
               
               <div className="flex items-center space-x-1 ml-2">
-                {todo.completed && (
+                {todo.status === TodoStatus.DONE && (
                   <CheckCircle className="h-4 w-4 text-green-500" />
                 )}
                 

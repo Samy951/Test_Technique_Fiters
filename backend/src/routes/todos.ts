@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { body, validationResult } from 'express-validator';
 import { todoModel } from '../models/TodoModel';
-import { CreateTodoData, UpdateTodoData, Priority, ErrorResponse } from '../types/Todo';
+import { CreateTodoData, UpdateTodoData, Priority, TodoStatus, ErrorResponse } from '../types/Todo';
 
 const router = Router();
 
@@ -20,8 +20,12 @@ const validateCreateTodo = [
     .withMessage('La description ne peut pas dépasser 500 caractères'),
   body('priority')
     .optional()
-    .isIn(Object.values(Priority))
+    .isIn(['low', 'medium', 'high'])
     .withMessage('La priorité doit être low, medium ou high'),
+  body('status')
+    .optional()
+    .isIn(['todo', 'progress', 'done'])
+    .withMessage('Le statut doit être todo, progress ou done'),
   body('dueDate')
     .optional()
     .isISO8601()
@@ -42,16 +46,16 @@ const validateUpdateTodo = [
     .withMessage('La description ne peut pas dépasser 500 caractères'),
   body('priority')
     .optional()
-    .isIn(Object.values(Priority))
+    .isIn(['low', 'medium', 'high'])
     .withMessage('La priorité doit être low, medium ou high'),
+  body('status')
+    .optional()
+    .isIn(['todo', 'progress', 'done'])
+    .withMessage('Le statut doit être todo, progress ou done'),
   body('dueDate')
     .optional()
     .isISO8601()
-    .withMessage('La date doit être au format ISO8601'),
-  body('completed')
-    .optional()
-    .isBoolean()
-    .withMessage('completed doit être un booléen')
+    .withMessage('La date doit être au format ISO8601')
 ];
 
 // Helper pour gérer les erreurs de validation
@@ -108,12 +112,13 @@ router.get('/:id', (req: Request, res: Response) => {
 // POST /api/todos - Créer une nouvelle tâche
 router.post('/', validateCreateTodo, handleValidationErrors, (req: Request, res: Response) => {
   try {
-    const todoData: CreateTodoData = {
-      title: req.body.title,
-      description: req.body.description,
-      priority: req.body.priority,
-      dueDate: req.body.dueDate ? new Date(req.body.dueDate) : null
-    };
+            const todoData: CreateTodoData = {
+          title: req.body.title,
+          description: req.body.description,
+          priority: req.body.priority,
+          status: req.body.status,
+          dueDate: req.body.dueDate ? new Date(req.body.dueDate) : null
+        };
     
     const newTodo = todoModel.create(todoData);
     res.status(201).json(newTodo);
@@ -128,13 +133,13 @@ router.put('/:id', validateUpdateTodo, handleValidationErrors, (req: Request, re
   try {
     const { id } = req.params;
     
-    const updateData: UpdateTodoData = {
-      ...(req.body.title !== undefined && { title: req.body.title }),
-      ...(req.body.description !== undefined && { description: req.body.description }),
-      ...(req.body.priority !== undefined && { priority: req.body.priority }),
-      ...(req.body.dueDate !== undefined && { dueDate: req.body.dueDate ? new Date(req.body.dueDate) : null }),
-      ...(req.body.completed !== undefined && { completed: req.body.completed })
-    };
+            const updateData: UpdateTodoData = {
+          ...(req.body.title !== undefined && { title: req.body.title }),
+          ...(req.body.description !== undefined && { description: req.body.description }),
+          ...(req.body.priority !== undefined && { priority: req.body.priority }),
+          ...(req.body.status !== undefined && { status: req.body.status }),
+          ...(req.body.dueDate !== undefined && { dueDate: req.body.dueDate ? new Date(req.body.dueDate) : null })
+        };
     
     const updatedTodo = todoModel.update(id, updateData);
     
@@ -149,11 +154,25 @@ router.put('/:id', validateUpdateTodo, handleValidationErrors, (req: Request, re
   }
 });
 
-// PATCH /api/todos/:id/toggle - Basculer le statut completed
-router.patch('/:id/toggle', (req: Request, res: Response) => {
+// PATCH /api/todos/:id/status - Changer le statut d'une tâche
+router.patch('/:id/status', [
+  body('status')
+    .notEmpty()
+    .isIn(['todo', 'progress', 'done'])
+    .withMessage('Le statut doit être todo, progress ou done')
+], (req: Request, res: Response) => {
   try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        error: 'Données invalides',
+        details: errors.array().map(err => err.msg).join(', ')
+      });
+    }
+
     const { id } = req.params;
-    const updatedTodo = todoModel.toggleCompleted(id);
+    const { status } = req.body;
+    const updatedTodo = todoModel.changeStatus(id, status);
     
     if (!updatedTodo) {
       return res.status(404).json({ error: 'Tâche non trouvée' });
@@ -161,7 +180,7 @@ router.patch('/:id/toggle', (req: Request, res: Response) => {
     
     res.json(updatedTodo);
   } catch (error) {
-    console.error('Erreur PATCH /todos/:id/toggle:', error);
+    console.error('Erreur PATCH /todos/:id/status:', error);
     res.status(500).json({ error: 'Erreur lors du changement de statut' });
   }
 });

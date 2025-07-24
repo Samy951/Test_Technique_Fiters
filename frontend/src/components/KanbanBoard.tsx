@@ -50,6 +50,10 @@ interface KanbanColumnProps {
 const KanbanColumn = ({ column, todos, onUpdateTodo, onDeleteTodo, isDraggedOver }: KanbanColumnProps) => {
   const { setNodeRef, isOver } = useDroppable({
     id: column.id,
+    data: {
+      type: 'column',
+      status: column.id
+    }
   })
 
   const Icon = column.icon

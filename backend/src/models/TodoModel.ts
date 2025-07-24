@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
-import { Todo, CreateTodoData, UpdateTodoData, Priority } from '../types/Todo';
+import { Todo, CreateTodoData, UpdateTodoData, Priority, TodoStatus } from '../types/Todo';
 
 export class TodoModel {
   private todos: Todo[] = [];
@@ -12,7 +12,7 @@ export class TodoModel {
       id: uuidv4(),
       title: todoData.title.trim(),
       description: todoData.description?.trim() || '',
-      completed: false,
+      status: todoData.status || TodoStatus.TODO,
       priority: todoData.priority || Priority.MEDIUM,
       dueDate: todoData.dueDate || null,
       createdAt: now,
@@ -45,7 +45,7 @@ export class TodoModel {
       ...(updateData.description !== undefined && { description: updateData.description.trim() }),
       ...(updateData.priority !== undefined && { priority: updateData.priority }),
       ...(updateData.dueDate !== undefined && { dueDate: updateData.dueDate }),
-      ...(updateData.completed !== undefined && { completed: updateData.completed }),
+      ...(updateData.status !== undefined && { status: updateData.status }),
       updatedAt: new Date()
     };
 
@@ -62,21 +62,19 @@ export class TodoModel {
     return true;
   }
 
-  // Basculer le statut completed
-  toggleCompleted(id: string): Todo | null {
-    const todo = this.getById(id);
-    if (!todo) return null;
-
-    return this.update(id, { completed: !todo.completed });
+  // Changer le statut d'une tâche
+  changeStatus(id: string, newStatus: TodoStatus): Todo | null {
+    return this.update(id, { status: newStatus });
   }
 
-  // Statistiques (bonus pour la démo)
-  getStats(): { total: number; completed: number; active: number } {
+    // Statistiques (bonus pour la démo)
+  getStats(): { total: number; completed: number; active: number; inProgress: number } {
     const total = this.todos.length;
-    const completed = this.todos.filter(todo => todo.completed).length;
-    const active = total - completed;
-    
-    return { total, completed, active };
+    const completed = this.todos.filter(todo => todo.status === TodoStatus.DONE).length;
+    const inProgress = this.todos.filter(todo => todo.status === TodoStatus.PROGRESS).length;
+    const active = this.todos.filter(todo => todo.status === TodoStatus.TODO).length;
+
+    return { total, completed, active, inProgress };
   }
 }
 

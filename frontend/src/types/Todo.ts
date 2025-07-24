@@ -1,15 +1,21 @@
 // Types partagés avec le backend - EXACT COPIE
 export enum Priority {
   LOW = 'low',
-  MEDIUM = 'medium', 
+  MEDIUM = 'medium',
   HIGH = 'high'
+}
+
+export enum TodoStatus {
+  TODO = 'todo',
+  PROGRESS = 'progress', 
+  DONE = 'done'
 }
 
 export interface Todo {
   id: string;
   title: string;
   description: string;
-  completed: boolean;
+  status: TodoStatus;
   priority: Priority;
   dueDate: Date | null;
   createdAt: Date;
@@ -21,6 +27,7 @@ export interface CreateTodoData {
   description?: string;
   priority?: Priority;
   dueDate?: Date | null;
+  status?: TodoStatus;
 }
 
 export interface UpdateTodoData {
@@ -28,11 +35,8 @@ export interface UpdateTodoData {
   description?: string;
   priority?: Priority;
   dueDate?: Date | null;
-  completed?: boolean;
+  status?: TodoStatus;
 }
-
-// Types spécifiques au frontend Kanban
-export type TodoStatus = 'todo' | 'progress' | 'done';
 
 export interface KanbanColumn {
   id: TodoStatus;
@@ -41,16 +45,11 @@ export interface KanbanColumn {
   color: string;
 }
 
-// Utilitaire pour convertir completed -> status
-export const getStatusFromCompleted = (completed: boolean): TodoStatus => {
-  return completed ? 'done' : 'todo';
-}
-
-// Utilitaire pour regrouper les todos par statut
+// Utilitaire pour regrouper les todos par statut (maintenant simple)
 export const groupTodosByStatus = (todos: Todo[]): Record<TodoStatus, Todo[]> => {
   return {
-    todo: todos.filter(todo => !todo.completed),
-    progress: [], // Pour l'instant, pas de statut "en cours" dans l'API
-    done: todos.filter(todo => todo.completed)
+    todo: todos.filter(todo => todo.status === TodoStatus.TODO),
+    progress: todos.filter(todo => todo.status === TodoStatus.PROGRESS),
+    done: todos.filter(todo => todo.status === TodoStatus.DONE)
   };
 } 

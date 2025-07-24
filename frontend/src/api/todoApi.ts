@@ -1,5 +1,5 @@
 import axios, { AxiosError } from 'axios';
-import { Todo, CreateTodoData, UpdateTodoData } from '../types/Todo';
+import { Todo, CreateTodoData, UpdateTodoData, TodoStatus } from '../types/Todo';
 
 // Configuration de base axios
 const api = axios.create({
@@ -49,6 +49,7 @@ export interface TodoStats {
   total: number;
   completed: number;
   active: number;
+  inProgress: number;
 }
 
 // API functions
@@ -89,9 +90,9 @@ export const todoApi = {
     return response.data;
   },
 
-  // Basculer le statut completed (pour le Kanban)
-  async toggleCompleted(id: string): Promise<Todo> {
-    const response = await api.patch<Todo>(`/todos/${id}/toggle`);
+  // Changer le statut d'une tâche (pour le Kanban)
+  async changeStatus(id: string, status: TodoStatus): Promise<Todo> {
+    const response = await api.patch<Todo>(`/todos/${id}/status`, { status });
     return response.data;
   },
 

@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react'
-import { DndContext, DragEndEvent, DragOverEvent, DragStartEvent } from '@dnd-kit/core'
+import { DndContext, DragEndEvent, DragOverEvent, DragStartEvent, DragOverlay } from '@dnd-kit/core'
 import { arrayMove } from '@dnd-kit/sortable'
-import { Todo, TodoStatus, groupTodosByStatus, Priority } from './types/Todo'
+import { Todo, TodoStatus, Priority, groupTodosByStatus } from './types/Todo'
 import { todoApi, safeApiCall } from './api/todoApi'
 import KanbanBoard from './components/KanbanBoard'
 import TodoForm from './components/TodoForm'
 import Header from './components/Header'
+import TodoCard from './components/TodoCard'
 
 function App() {
   // État principal
@@ -21,6 +22,8 @@ function App() {
   useEffect(() => {
     loadTodos()
   }, [])
+
+
 
   const loadTodos = async () => {
     setLoading(true)
@@ -82,13 +85,13 @@ function App() {
     }
   }
 
-  // Toggle completed (pour drag entre colonnes)
-  const handleToggleCompleted = async (id: string) => {
-    const { data, error } = await safeApiCall(() => todoApi.toggleCompleted(id))
+  // Changer le statut d'une tâche (pour drag entre colonnes)
+  const handleChangeStatus = async (id: string, newStatus: TodoStatus) => {
+    const { data, error } = await safeApiCall(() => todoApi.changeStatus(id, newStatus))
     
     if (error) {
       setError('Impossible de changer le statut')
-      console.error('Toggle completed error:', error)
+      console.error('Change status error:', error)
     } else if (data) {
       setTodos(prev => prev.map(todo => todo.id === id ? data : todo))
       setError(null)
@@ -109,35 +112,41 @@ function App() {
     // On pourrait ajouter des animations ici
   }
 
-  const handleDragEnd = async (event: DragEndEvent) => {
+    const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event
-    
+
     setActiveId(null)
     setDraggedTodo(null)
-    
+
     if (!over) return
-    
+
     const todoId = active.id as string
-    const newStatus = over.id as TodoStatus
     
+    // Vérifier que c'est bien une colonne (statut valide) et non une tâche
+    const validStatuses = ['todo', 'progress', 'done']
+    if (!validStatuses.includes(over.id as string)) {
+      console.warn('Drop invalide - pas sur une colonne:', over.id)
+      return
+    }
+    
+    const newStatus = over.id as TodoStatus
+
     // Trouver la tâche déplacée
     const todo = todos.find(t => t.id === todoId)
     if (!todo) return
-    
-    // Déterminer si on doit changer le statut completed
-    const shouldBeCompleted = newStatus === 'done'
-    
-    if (todo.completed !== shouldBeCompleted) {
-      // Mise à jour optimiste d'abord
-      setTodos(prev => prev.map(t => 
-        t.id === todoId 
-          ? { ...t, completed: shouldBeCompleted, updatedAt: new Date() }
-          : t
-      ))
-      
-      // Puis mise à jour serveur
-      await handleToggleCompleted(todoId)
-    }
+
+    // Si pas de changement, on sort
+    if (todo.status === newStatus) return
+
+    // Mise à jour optimiste d'abord
+    setTodos(prev => prev.map(t =>
+      t.id === todoId
+        ? { ...t, status: newStatus, updatedAt: new Date() }
+        : t
+    ))
+
+    // Puis mise à jour serveur
+    await handleChangeStatus(todoId, newStatus)
   }
 
   // Grouper les todos par statut pour le Kanban
@@ -156,10 +165,10 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header 
-        totalTodos={todos.length}
-        completedTodos={todos.filter(t => t.completed).length}
-      />
+                <Header
+            totalTodos={todos.length}
+            completedTodos={todos.filter(t => t.status === TodoStatus.DONE).length}
+          />
       
       {error && (
         <div className="max-w-7xl mx-auto px-4 pt-4">
@@ -179,18 +188,30 @@ function App() {
         <div className="space-y-6">
           <TodoForm onSubmit={handleCreateTodo} />
           
-          <DndContext
-            onDragStart={handleDragStart}
-            onDragOver={handleDragOver}
-            onDragEnd={handleDragEnd}
-          >
-            <KanbanBoard
-              groupedTodos={groupedTodos}
-              onUpdateTodo={handleUpdateTodo}
-              onDeleteTodo={handleDeleteTodo}
-              draggedTodo={draggedTodo}
-            />
-          </DndContext>
+                                <DndContext
+                        onDragStart={handleDragStart}
+                        onDragOver={handleDragOver}
+                        onDragEnd={handleDragEnd}
+                      >
+                        <KanbanBoard
+                          groupedTodos={groupedTodos}
+                          onUpdateTodo={handleUpdateTodo}
+                          onDeleteTodo={handleDeleteTodo}
+                          draggedTodo={draggedTodo}
+                        />
+                        
+                        <DragOverlay>
+                          {draggedTodo ? (
+                            <div className="transform rotate-3 opacity-90">
+                              <TodoCard
+                                todo={draggedTodo}
+                                onUpdate={() => Promise.resolve()}
+                                onDelete={() => Promise.resolve()}
+                              />
+                            </div>
+                          ) : null}
+                        </DragOverlay>
+                      </DndContext>
         </div>
       </main>
     </div>

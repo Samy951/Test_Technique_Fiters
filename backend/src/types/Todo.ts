@@ -1,8 +1,15 @@
 // Énumération des priorités
 export enum Priority {
   LOW = 'low',
-  MEDIUM = 'medium', 
+  MEDIUM = 'medium',
   HIGH = 'high'
+}
+
+// Énumération des statuts Kanban
+export enum TodoStatus {
+  TODO = 'todo',
+  PROGRESS = 'progress', 
+  DONE = 'done'
 }
 
 // Interface pour une tâche complète
@@ -10,7 +17,7 @@ export interface Todo {
   id: string;
   title: string;
   description: string;
-  completed: boolean;
+  status: TodoStatus;
   priority: Priority;
   dueDate: Date | null;
   createdAt: Date;
@@ -23,6 +30,7 @@ export interface CreateTodoData {
   description?: string;
   priority?: Priority;
   dueDate?: Date | null;
+  status?: TodoStatus;
 }
 
 // Interface pour mettre à jour une tâche (tous les champs optionnels)
@@ -31,7 +39,7 @@ export interface UpdateTodoData {
   description?: string;
   priority?: Priority;
   dueDate?: Date | null;
-  completed?: boolean;
+  status?: TodoStatus;
 }
 
 // Interface pour les réponses d'erreur
