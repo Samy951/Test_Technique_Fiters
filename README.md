@@ -202,14 +202,6 @@ npm run preview          # Prévisualisation du build
 - **Feedback utilisateur** (loading, erreurs)
 - **Mode sombre** compatible
 
-## 🚧 Améliorations Futures
-
-- [ ] Authentification utilisateur
-- [ ] Base de données persistante
-- [ ] WebSockets pour le temps réel
-- [ ] Tests unitaires et e2e
-- [ ] Docker pour le déploiement
-- [ ] PWA avec notifications
 
 ## 👨‍💻 Développeur
 
