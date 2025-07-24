@@ -67,29 +67,22 @@ const TodoForm = ({ onSubmit }: TodoFormProps) => {
 
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden">
-      {/* Form header */}
-      <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
-        <button
-          type="button"
-          onClick={() => setIsExpanded(!isExpanded)}
-          className="flex items-center justify-between w-full text-left"
-        >
-          <div className="flex items-center space-x-2">
-            <Plus className={`h-5 w-5 transition-transform ${isExpanded ? 'rotate-45' : ''}`} />
-            <h2 className="text-lg font-semibold text-gray-900">
-              {isExpanded ? 'Nouvelle tâche' : 'Ajouter une tâche'}
-            </h2>
-          </div>
-          <span className="text-sm text-gray-500">
-            {isExpanded ? 'Cliquez pour réduire' : 'Cliquez pour développer'}
-          </span>
-        </button>
-      </div>
-
       {/* Form content */}
       <form onSubmit={handleSubmit} className={`transition-all duration-300 ${isExpanded ? 'block' : 'hidden'}`}>
         <div className="p-6 space-y-4">
-          {/* Titre (toujours visible) */}
+          {/* Header du formulaire */}
+          <div className="flex items-center justify-between pb-2 border-b border-gray-200">
+            <h2 className="text-lg font-semibold text-gray-900">Nouvelle tâche</h2>
+            <button
+              type="button"
+              onClick={() => setIsExpanded(false)}
+              className="text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              <Plus className="h-5 w-5 rotate-45" />
+            </button>
+          </div>
+          
+          {/* Titre */}
           <div>
             <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
               Titre de la tâche *
@@ -148,7 +141,7 @@ const TodoForm = ({ onSubmit }: TodoFormProps) => {
             <div>
               <label htmlFor="dueDate" className="flex items-center text-sm font-medium text-gray-700 mb-1">
                 <Calendar className="h-4 w-4 mr-1" />
-                Échéance
+                Échéance*
               </label>
               <input
                 id="dueDate"
@@ -163,15 +156,7 @@ const TodoForm = ({ onSubmit }: TodoFormProps) => {
         </div>
 
         {/* Form actions */}
-        <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
-          <button
-            type="button"
-            onClick={() => setIsExpanded(false)}
-            className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
-          >
-            Annuler
-          </button>
-          
+        <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end">
           <button
             type="submit"
             disabled={!formData.title.trim() || isSubmitting}
@@ -194,16 +179,17 @@ const TodoForm = ({ onSubmit }: TodoFormProps) => {
 
       {/* Quick add mode quand fermé */}
       {!isExpanded && (
-        <div className="p-4">
+        <div className="p-6">
           <button
             type="button"
             onClick={() => setIsExpanded(true)}
-            className="w-full text-left px-4 py-3 text-gray-500 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors border-2 border-dashed border-gray-300 hover:border-gray-400"
+            className="w-full text-left px-6 py-4 text-gray-600 hover:text-gray-800 bg-gray-50 hover:bg-blue-50 rounded-lg transition-all duration-200 border-2 border-dashed border-gray-300 hover:border-blue-300 group"
           >
-            <div className="flex items-center space-x-2">
-              <Plus className="h-4 w-4" />
-              <span>Que voulez-vous accomplir aujourd'hui ?</span>
+            <div className="flex items-center space-x-3">
+              <Plus className="h-5 w-5 text-blue-500 group-hover:text-blue-600" />
+              <span className="font-medium">Que voulez-vous accomplir aujourd'hui ?</span>
             </div>
+            <p className="text-sm text-gray-500 mt-1 ml-8">Cliquez pour créer une nouvelle tâche</p>
           </button>
         </div>
       )}
